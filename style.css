@@ -1,11 +1,14 @@
-@import url(./reset.css);
+@import url(./css/reset.css);
+
+body{
+    display : flex;
+    justify-content: center;
+}
 
 table{
     width: 100vw;
     height : 100vw;
 }
-
-
 
 .background{
     border: 1px solid black;
@@ -51,7 +54,12 @@ table{
     background-color: purple;
 }
 
-
+@media screen and (min-width: 550px) {
+    table{
+        width : 550px;
+        height : 550px;
+    }
+}
 
 
 

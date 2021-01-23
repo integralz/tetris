@@ -3,14 +3,14 @@ var str = "";
 var board = new Array(30);
 var now_block = Math.floor(Math.random() * 7);
 var next_block = Math.floor(Math.random() * 7);
-var left_top_x = 5;
+var left_top_x = 4;
 var left_top_y = 11;
 var rotate = 0;
 var order = 0;
+var play_continue;
 
 //keyup : end of press, keydown: start do press
-document.addEventListener("keyup", function(e){
-    console.log(e);    
+document.addEventListener("keyup", function(e){   
     if(e.key == "ArrowDown"){
         order = 0;
         eventplay();
@@ -25,6 +25,10 @@ document.addEventListener("keyup", function(e){
     }
     else if(e.key == "ArrowRight"){
         order = 3;
+        eventplay();
+    }
+    else if(e.key == " "){
+        order = 4;
         eventplay();
     }
 });
@@ -130,24 +134,56 @@ function check_can() {
 function init_block() {
     now_block = next_block;
     next_block = Math.floor(Math.random() * 7);
-    left_top_x = 5;
+    left_top_x = 4;
     left_top_y = 11;
     rotate = 0;
 }
 
-function block_down() {
-    --left_top_x;
+function block_change() {
+    //down
+    if(order == 0){
+        --left_top_x;
+    }
+    //up
+    else if(order == 1){
+        rotate = (1 + rotate) % 4;
+    }
+    //left
+    else if(order == 2){
+        ++left_top_y;
+    }
+    //right
+    else if(order == 3){
+        --left_top_y;
+    }
+    
     for (var i = 0; i < 4; ++i) {
         for (var j = 0; j < 4; ++j) {
             if (board[i + left_top_x][j + left_top_y] == now_block)
                 board[i + left_top_x][j + left_top_y] = 8;
         }
     }
-    ++left_top_x;
+
+    //down
+    if(order == 0){
+        ++left_top_x;
+    }
+    //up
+    else if(order == 1){
+        rotate = (3 + rotate) % 4;
+    }
+    //left
+    else if(order == 2){
+        --left_top_y;
+    }
+    //right
+    else if(order == 3){
+        ++left_top_y;
+    }
 
     for (var i = 0; i < 4; ++i) {
         for (var j = 0; j < 4; ++j) {
-            if (block[now_block][0][i][j] != 0) {
+            if (block[now_block][rotate][i][j] != 0) {
                 board[i + left_top_x][j + left_top_y] = now_block;
             }
 
@@ -158,7 +194,7 @@ function block_down() {
 }
 
 function block_built() {
-    for (var i = 0; i < 3; ++i) {
+    for (var i = 0; i < 4; ++i) {
         for (var j = 0; j < 4; ++j) {
             if (block[now_block][rotate][i][j] != 0) {
                 board[i + left_top_x][j + left_top_y] = 9;
@@ -172,38 +208,135 @@ function delete_line(){
     let line_deleted = 0;
     for(var i = 3; i >= 0; --i){
         for(var j = 7; j < 17; ++j){
-            if(board[i + left_top_x + line_deleted][j] != 9) continue;
+            if(board[i + left_top_x + line_deleted][j] != 9) break;
             ++cou;
         }
         if(cou == 10){
             //we have to do plus
+            for(var j = i + left_top_x + line_deleted - 1; j >= 5; --j){
+                for(var k = 7; k < 17; ++k){
+                    board[j + 1][k] = board[j][k];
+                }
+            }
+            for(var j = 7; j < 17; ++j)
+                board[5][j] = 8;
             ++line_deleted;
         }
-        console.log(cou);
         cou = 0;
     }
 }
 
+function check_end(){
+    for(var i = 0; i < 4; ++i){
+        for(var j = 0; j < 4; ++j){
+            if(block[now_block][rotate][i][j] == 1 && board[left_top_x + i][left_top_y + j] == 9)
+                return true;
+        }
+    }
+    return false;
+}
+
 function play() {
-    console.log("1");
+    if(check_end() == true) {
+        for(var i = 7; i < 17; ++i)
+            board[4][i] = 7;
+        change_color();
+        clearInterval(play_continue);
+        alert("Game Over!");
+        return;
+    }
     ++left_top_x;
     order = 0;
     if (check_can() == true) {
-        block_down();
+        block_change();
     }
     else {
         block_built();
         delete_line();
         init_block();
-
+        draw_nextblock();
     }
     change_color();
+}
+
+function eventplay(){
+    //down
+    if(order == 0){
+        play();
+    }
+    //up
+    else if(order == 1){
+        rotate = (1 + rotate) % 4;
+        if (check_can() == true) {
+            block_change();
+            change_color();
+        }
+    }
+    //left
+    else if(order == 2){
+        --left_top_y;
+        if (check_can() == true) {
+            block_change();
+            change_color();
+        }
+    }
+    //right
+    else if(order == 3){
+        ++left_top_y;
+        if (check_can() == true) {
+            block_change();
+            change_color();
+        }
+    }
+    //space
+    else if(order == 4){
+        while(1){
+            if(check_end() == true) {
+                console.log("end");
+                for(var i = 7; i < 17; ++i)
+                    board[4][i] = 7;
+                clearInterval(play_continue);
+                return;
+            }
+            ++left_top_x;
+            order = 0;
+            if (check_can() == true) {
+                block_change();
+                change_color();
+            }
+            else {
+                block_built();
+                delete_line();
+                init_block();
+                draw_nextblock();
+                change_color();
+                return;
+            }
+        }
+    }
+}
+
+function draw_nextblock(){
+    for(var i = 7; i < 11; ++i){
+        for(var j = 20; j < 24; ++j){
+            board[i][j] = 8;
+        }
+    }
+
+    for(var i = 0; i < 4; ++i){
+        for(var j = 0; j < 4; ++j){
+            if(block[next_block][0][i][j] != 0){
+                board[i + 7][j + 20] = next_block;
+            }
+        }
+    }
 }
 
 function init() {
     make_board();
     play();
-    setInterval(play, 1000);
+    draw_nextblock();
+    play_continue = setInterval(play, 1000);
 }
 
 init();
